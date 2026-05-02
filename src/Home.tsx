@@ -11,6 +11,7 @@ interface Product {
   is_new: boolean;
   is_offer: boolean;
   category_id: string;
+  image_url?: string | null;
   categories: { name: string } | null;
 }
 
@@ -160,14 +161,18 @@ function Home() {
             ) : (
               products.map(product => (
                 <div className="pg-card" key={product.id}>
-                  <div className="pg-card-img" style={{ background: product.is_offer ? '#EEF2EC' : product.is_new ? '#F0ECE4' : '#EEE9F0' }}>
-                    <div className="pg-card-img-inner" style={{ background: product.is_offer ? '#DDE6D9' : product.is_new ? '#E2DDD4' : '#DED4E4' }}>
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                        <rect x="2" y="2" width="32" height="32" rx="4" stroke="#888" strokeWidth="1.5" />
-                        <line x1="2" y1="2" x2="34" y2="34" stroke="#888" strokeWidth="1.5" />
-                        <line x1="34" y1="2" x2="2" y2="34" stroke="#888" strokeWidth="1.5" />
-                      </svg>
-                    </div>
+                  <div className="pg-card-img" style={{ background: product.is_offer ? '#EEF2EC' : product.is_new ? '#F0ECE4' : '#EEE9F0', overflow: 'hidden' }}>
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div className="pg-card-img-inner" style={{ background: product.is_offer ? '#DDE6D9' : product.is_new ? '#E2DDD4' : '#DED4E4' }}>
+                        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                          <rect x="2" y="2" width="32" height="32" rx="4" stroke="#888" strokeWidth="1.5" />
+                          <line x1="2" y1="2" x2="34" y2="34" stroke="#888" strokeWidth="1.5" />
+                          <line x1="34" y1="2" x2="2" y2="34" stroke="#888" strokeWidth="1.5" />
+                        </svg>
+                      </div>
+                    )}
                     {product.is_new && <div className="pg-card-badge">Nuevo</div>}
                     {product.is_offer && <div className="pg-card-badge" style={{ background: '#7B9E87' }}>Oferta</div>}
                   </div>

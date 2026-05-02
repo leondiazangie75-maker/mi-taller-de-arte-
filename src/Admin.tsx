@@ -27,6 +27,8 @@ export default function Admin() {
   const [newProdCat, setNewProdCat] = useState('');
   const [newProdIsNew, setNewProdIsNew] = useState(false);
   const [newProdIsOffer, setNewProdIsOffer] = useState(false);
+  const [newProdImage, setNewProdImage] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // New Service Form
   const [newServiceName, setNewServiceName] = useState('');
@@ -104,14 +106,37 @@ export default function Admin() {
   // --- Handlers para Productos ---
   const handleAddProduct = async (e: FormEvent) => {
     e.preventDefault();
+    setIsUploading(true);
+    
+    let imageUrl = null;
+    if (newProdImage) {
+      const fileExt = newProdImage.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(fileName, newProdImage);
+        
+      if (uploadError) {
+        alert('Error subiendo imagen: ' + uploadError.message);
+        setIsUploading(false);
+        return;
+      }
+      const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+      imageUrl = data.publicUrl;
+    }
+
     const { error } = await supabase.from('products').insert([{
       name: newProdName,
       price: Number(newProdPrice),
       old_price: newProdOldPrice ? Number(newProdOldPrice) : null,
       category_id: newProdCat || null,
       is_new: newProdIsNew,
-      is_offer: newProdIsOffer
+      is_offer: newProdIsOffer,
+      image_url: imageUrl
     }]);
+    
+    setIsUploading(false);
+    
     if (!error) {
       setNewProdName('');
       setNewProdPrice('');
@@ -119,6 +144,7 @@ export default function Admin() {
       setNewProdCat('');
       setNewProdIsNew(false);
       setNewProdIsOffer(false);
+      setNewProdImage(null);
       fetchAdminData();
     } else {
       alert('Error al agregar producto: ' + error.message);
@@ -218,19 +244,32 @@ export default function Admin() {
                   <option value="">Selecciona Categoría</option>
                   {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                <div style={{display: 'flex', gap: '1rem'}}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                  <label style={{fontSize: '14px', color: '#666'}}>Imagen del producto (Opcional)</label>
+                  <input type="file" accept="image/*" onChange={e => setNewProdImage(e.target.files ? e.target.files[0] : null)} className="pg-cf-input" style={{padding: '8px'}} />
+                </div>
+                <div style={{display: 'flex', gap: '1rem', marginTop: '10px'}}>
                   <label><input type="checkbox" checked={newProdIsNew} onChange={e=>setNewProdIsNew(e.target.checked)} /> Es Nuevo</label>
                   <label><input type="checkbox" checked={newProdIsOffer} onChange={e=>setNewProdIsOffer(e.target.checked)} /> Es Oferta</label>
                 </div>
-                <button type="submit" className="pg-cf-btn" style={{width: '200px'}}>Añadir Producto</button>
+                <button type="submit" className="pg-cf-btn" style={{width: '200px'}} disabled={isUploading}>
+                  {isUploading ? 'Subiendo...' : 'Añadir Producto'}
+                </button>
               </form>
             </div>
 
             <div className="pg-admin-list">
               {products.map(p => (
                 <div key={p.id} className="pg-admin-list-item">
-                  <div>
-                    <strong>{p.name}</strong> - ${p.price} <small>({p.categories?.name})</small>
+                  <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name} style={{width: '50px', height: '50px', objectFit: 'cover', borderRadius: '6px'}} />
+                    ) : (
+                      <div style={{width: '50px', height: '50px', background: '#eee', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>📦</div>
+                    )}
+                    <div>
+                      <strong>{p.name}</strong> - ${p.price} <small>({p.categories?.name})</small>
+                    </div>
                   </div>
                   <button onClick={() => handleDeleteProduct(p.id)} className="pg-admin-del-btn">Eliminar</button>
                 </div>

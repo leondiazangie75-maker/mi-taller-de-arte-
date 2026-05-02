@@ -1,4 +1,4 @@
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import './index.css';
 import logo from './assets/LOGO.PNG.jpeg';
 import { supabase } from './supabase';
@@ -24,6 +24,7 @@ function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -98,17 +99,23 @@ function App() {
         <div className="pg-nav-logo">
           <img src={logo} alt="YELI Logo" onError={(e) => { e.currentTarget.style.display='none'; }} />
         </div>
-        <div className="pg-nav-links">
-          <a href="#inicio" className="active">Inicio</a>
-          <a href="#productos">Productos</a>
-          <a href="#categorias">Categorías</a>
-          <a href="#productos">Ofertas</a>
-          <a href="#contacto">Contacto</a>
+        <div className={`pg-nav-links ${isMenuOpen ? 'open' : ''}`}>
+          <a href="#inicio" className="active" onClick={() => setIsMenuOpen(false)}>Inicio</a>
+          <a href="#productos" onClick={() => setIsMenuOpen(false)}>Productos</a>
+          <a href="#categorias" onClick={() => setIsMenuOpen(false)}>Categorías</a>
+          <a href="#contacto" onClick={() => setIsMenuOpen(false)}>Contacto</a>
         </div>
         <div className="pg-search">
           <span style={{ color: '#666', fontSize: '14px' }}>⌕</span>
           <input placeholder="Buscar productos..." />
         </div>
+        <button className="pg-hamburger" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
       </nav>
 
       <div className="pg-hero" id="inicio">
@@ -288,7 +295,6 @@ function App() {
             <div className="pg-footer-col-links">
               <a>Productos</a>
               <a>Novedades</a>
-              <a>Ofertas</a>
               <a>Marcas</a>
             </div>
           </div>

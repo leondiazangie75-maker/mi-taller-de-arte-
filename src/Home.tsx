@@ -111,6 +111,7 @@ function Home() {
           <a href="#servicios" onClick={() => setIsMenuOpen(false)}>Servicios</a>
           <a href="#categorias" onClick={() => setIsMenuOpen(false)}>Categorías</a>
           <a href="#contacto" onClick={() => setIsMenuOpen(false)}>Contacto</a>
+          <a href="/admin" style={{ color: '#C8A96E', fontWeight: 'bold' }}>Admin <span style={{fontSize:'12px'}}>🔒</span></a>
         </div>
         <div className="pg-search">
           <span style={{ color: '#666', fontSize: '14px' }}>⌕</span>

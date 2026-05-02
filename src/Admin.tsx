@@ -9,11 +9,12 @@ export default function Admin() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   
-  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'messages'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'categories' | 'messages' | 'services'>('products');
   
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
 
   // New Category Form
   const [newCatName, setNewCatName] = useState('');
@@ -26,6 +27,12 @@ export default function Admin() {
   const [newProdCat, setNewProdCat] = useState('');
   const [newProdIsNew, setNewProdIsNew] = useState(false);
   const [newProdIsOffer, setNewProdIsOffer] = useState(false);
+
+  // New Service Form
+  const [newServiceName, setNewServiceName] = useState('');
+  const [newServiceDesc, setNewServiceDesc] = useState('');
+  const [newServicePrice, setNewServicePrice] = useState('');
+  const [newServiceIcon, setNewServiceIcon] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,6 +61,10 @@ export default function Admin() {
     // Mensajes
     const { data: msgs } = await supabase.from('contact_messages').select('*').order('created_at', { ascending: false });
     if (msgs) setMessages(msgs);
+
+    // Servicios
+    const { data: servs } = await supabase.from('services').select('*');
+    if (servs) setServices(servs);
   }
 
   const handleLogin = async (e: FormEvent) => {
@@ -122,6 +133,34 @@ export default function Admin() {
     }
   };
 
+  // --- Handlers para Servicios ---
+  const handleAddService = async (e: FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from('services').insert([{
+      name: newServiceName,
+      description: newServiceDesc,
+      price: newServicePrice ? Number(newServicePrice) : null,
+      icon: newServiceIcon
+    }]);
+    if (!error) {
+      setNewServiceName('');
+      setNewServiceDesc('');
+      setNewServicePrice('');
+      setNewServiceIcon('');
+      fetchAdminData();
+    } else {
+      alert('Error al agregar servicio: ' + error.message);
+    }
+  };
+
+  const handleDeleteService = async (id: string) => {
+    if (confirm('¿Seguro que quieres eliminar este servicio?')) {
+      const { error } = await supabase.from('services').delete().eq('id', id);
+      if (!error) fetchAdminData();
+      else alert('Error: ' + error.message);
+    }
+  };
+
   if (loading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Cargando panel...</div>;
 
   if (!session) {
@@ -159,6 +198,7 @@ export default function Admin() {
         <div className="pg-admin-menu">
           <button className={activeTab === 'products' ? 'active' : ''} onClick={() => setActiveTab('products')}>Productos</button>
           <button className={activeTab === 'categories' ? 'active' : ''} onClick={() => setActiveTab('categories')}>Categorías</button>
+          <button className={activeTab === 'services' ? 'active' : ''} onClick={() => setActiveTab('services')}>Servicios</button>
           <button className={activeTab === 'messages' ? 'active' : ''} onClick={() => setActiveTab('messages')}>Mensajes</button>
         </div>
         <button onClick={handleLogout} className="pg-admin-logout">Cerrar Sesión</button>
@@ -232,6 +272,34 @@ export default function Admin() {
                   <div style={{fontWeight: 'bold', margin: '5px 0'}}>{m.name} &lt;{m.email}&gt;</div>
                   <div style={{fontWeight: 'bold', color: '#C8A96E'}}>{m.subject}</div>
                   <p style={{marginTop: '10px'}}>{m.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'services' && (
+          <div>
+            <h2>Gestión de Servicios</h2>
+            <div className="pg-admin-card">
+              <h3>Añadir Nuevo Servicio</h3>
+              <form onSubmit={handleAddService} className="pg-admin-form">
+                <input placeholder="Nombre del Servicio" required value={newServiceName} onChange={e=>setNewServiceName(e.target.value)} className="pg-cf-input" />
+                <textarea placeholder="Descripción" required value={newServiceDesc} onChange={e=>setNewServiceDesc(e.target.value)} className="pg-cf-textarea" style={{minHeight: '80px'}}></textarea>
+                <input type="number" placeholder="Precio ($) - Opcional" value={newServicePrice} onChange={e=>setNewServicePrice(e.target.value)} className="pg-cf-input" />
+                <input placeholder="Emoji / Ícono" required value={newServiceIcon} onChange={e=>setNewServiceIcon(e.target.value)} className="pg-cf-input" />
+                <button type="submit" className="pg-cf-btn" style={{width: '200px'}}>Añadir Servicio</button>
+              </form>
+            </div>
+
+            <div className="pg-admin-list">
+              {services.map(s => (
+                <div key={s.id} className="pg-admin-list-item">
+                  <div style={{display: 'flex', flexDirection: 'column', gap: '4px'}}>
+                    <div>{s.icon} <strong>{s.name}</strong> {s.price ? `- $${s.price}` : ''}</div>
+                    <div style={{fontSize: '12px', color: '#666'}}>{s.description}</div>
+                  </div>
+                  <button onClick={() => handleDeleteService(s.id)} className="pg-admin-del-btn">Eliminar</button>
                 </div>
               ))}
             </div>

@@ -23,6 +23,7 @@ interface Category {
 function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -58,6 +59,11 @@ function Home() {
       
       if (prodError) throw prodError;
       if (prods) setProducts(prods);
+
+      // Fetch Services
+      const { data: servs, error: servError } = await supabase.from('services').select('*');
+      if (servError) throw servError;
+      if (servs) setServices(servs);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -102,6 +108,7 @@ function Home() {
         <div className={`pg-nav-links ${isMenuOpen ? 'open' : ''}`}>
           <a href="#inicio" className="active" onClick={() => setIsMenuOpen(false)}>Inicio</a>
           <a href="#productos" onClick={() => setIsMenuOpen(false)}>Productos</a>
+          <a href="#servicios" onClick={() => setIsMenuOpen(false)}>Servicios</a>
           <a href="#categorias" onClick={() => setIsMenuOpen(false)}>Categorías</a>
           <a href="#contacto" onClick={() => setIsMenuOpen(false)}>Contacto</a>
         </div>
@@ -171,6 +178,29 @@ function Home() {
                       {product.old_price && <span className="pg-card-price-old">{formatPrice(product.old_price)}</span>}
                     </div>
                   </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="pg-section" id="servicios" style={{ background: '#fcfaf8' }}>
+        <div className="pg-section-header" style={{ padding: '0 2rem' }}>
+          <div className="pg-section-title">Nuestros Servicios</div>
+        </div>
+        
+        {loading ? null : (
+          <div style={{ padding: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '2rem' }}>
+            {services.length === 0 ? (
+              <div style={{ color: '#888' }}>No hay servicios disponibles aún.</div>
+            ) : (
+              services.map(serv => (
+                <div key={serv.id} style={{ background: '#fff', padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f0f0f0' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{serv.icon}</div>
+                  <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: '20px', marginBottom: '0.5rem', color: '#1a1a1a' }}>{serv.name}</h3>
+                  <p style={{ color: '#666', fontSize: '14px', lineHeight: '1.5', marginBottom: '1rem' }}>{serv.description}</p>
+                  {serv.price && <div style={{ color: '#C8A96E', fontWeight: '600', fontSize: '18px' }}>{formatPrice(serv.price)}</div>}
                 </div>
               ))
             )}
